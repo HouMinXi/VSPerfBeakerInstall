@@ -20,12 +20,12 @@ progname=$0
 
 function usage () {
    cat <<EOF
-Usage: $progname [-c cpus] [-l url to compose] [-v enable viommu] [-d debug output to screen ] [-r dpdk package location for guest]
+Usage: $progname [-c cpus] [-l url to compose] [-v enable viommu] [-d debug output to screen ] [-r dpdk package location for guest] [-k enable rt kernel for guest] [-n name for disk filename]
 EOF
    exit 0
 }
 
-while getopts c:l:r:dhvu FLAG; do
+while getopts c:l:r:n:dhvuk FLAG; do
    case $FLAG in
 
    c)  echo "Creating VM with $OPTARG cpus" 
@@ -43,6 +43,12 @@ while getopts c:l:r:dhvu FLAG; do
    r)  echo "DPDK release verison $OPTARG"
        DPDK_URL=$OPTARG
        ;;
+   k) echo "Enable rt kernel installation"
+      RT_KERNEL="YES"
+     ;;
+   n) echo "set $OPTARG name from disk filename"
+     dist=$OPTARG
+     ;;
    h)  echo "found $opt" ; usage ;;
    \?)  usage ;;
    esac
@@ -55,7 +61,8 @@ vm=${VM_NAME}
 bridge=virbr0
 master_image=${vm}.qcow2
 image_path=/var/lib/libvirt/images/
-dist=rhel73
+dist=${dist:-"rhel73"}
+RT_KERNEL=${RT_KERNEL:-"NO"}
 location=$LOCATION
 if [[ ${location: -1} == "/" ]]
 then
@@ -65,7 +72,9 @@ fi
 #echo $DPDK_URL
 temp_str=$(basename $DPDK_URL)
 DPDK_TOOL_URL=$(dirname $DPDK_URL)/${temp_str/dpdk/dpdk-tools}
-DPDK_VERSION=`echo $temp_str | grep -oP "[1-9]+\.[1-9]+\-[1-9]+" | sed -n 's/\.//p'`
+# fix can't grep dpdk20 veriosn,http://download-node-02.eng.bos.redhat.com/brewroot/packages/dpdk/20.11/1.el8fdb.3/x86_64/dpdk-20.11-1.el8fdb.3.x86_64.rpm
+# DPDK_VERSION=`echo $temp_str | grep -oP "[1-9]+\.[1-9]+\-[1-9]+" | sed -n 's/\.//p'`
+DPDK_VERSION=`echo $temp_str | grep -oP "\d+\.\d+\-\d+" | sed -n 's/\.//p'`
 echo "DPDK VERISON IS "$DPDK_VERSION
 
 extra="ks=file:/${dist}-vm.ks console=ttyS0,115200"
@@ -85,7 +94,12 @@ echo deleting master image
 
 #rhel_version=`echo $location | awk -F '/' '{print $(NF-3)}' | awk -F '-' '{print $1}' | tr -d '.'`
 #fix this rhel7 and rhel8 location different use regex get version info 
-rhel_version=`echo $location | grep -oP "\/RHEL-\d+\.\d+|\/\d+\.\d+|\/latest-RHEL-\d+\.\d+" | tr -d '\.\/\-[a-zA-Z]'`
+#rhel_version=`echo $location | grep -oP "\/RHEL-\d+\.\d+|\/\d+\.\d+|\/latest-RHEL-\d+\.\d+" | tr -d '\.\/\-[a-zA-Z]'`
+# fix can't install stable kernel. i.g http://download-01.eng.brq.redhat.com/rhel-8/rel-eng/RHEL-8/latest-RHEL-8/compose/BaseOS/x86_64/os/
+compose_link=`sed "s/compose.*/COMPOSE_ID/g" <<< "$location"`
+echo $compose_link
+curl -I $compose_link
+rhel_version=`curl -s $compose_link | grep -oP "RHEL-\d+\.\d+" | tr -d '\.\/\-[a-zA-Z]'`
 if (( $rhel_version >= 80 ))
 then
     base_repo='repo --name="beaker-BaseOS" --baseurl='$location
@@ -160,6 +174,7 @@ selinux --enforcing
 @base
 @core
 @network-tools
+kernel-rt*
 %end
 
 %post
@@ -236,9 +251,14 @@ fi
 
 yum -y install iperf3
 ln -s /usr/bin/iperf3 /usr/bin/iperf
+if [[ $RT_KERNEL == 'YES' ]] then;
+  yum install -y numactl-devel
+  yum install -y libibverbs rdma-core 1>/root/post_install.log 2>&1
+else
+  yum install -y kernel-devel numactl-devel
+  yum install -y tuna git nano ftp wget sysstat libibverbs rdma-core 1>/root/post_install.log 2>&1
+fi
 
-yum install -y kernel-devel numactl-devel
-yum install -y tuna git nano ftp wget sysstat 1>/root/post_install.log 2>&1
 
 #Here mkdir and download dpdk
 mkdir -p /root/dpdkrpms/$DPDK_VERSION
@@ -258,6 +278,8 @@ elif [ "$VIOMMU" == "NO" ] && [ "$DPDK_BUILD" == "YES" ]; then
 elif [ "$VIOMMU" == "YES" ] && [ "$DPDK_BUILD" == "YES" ]; then
     /root/setup_rpms.sh -u -v 1>/root/post_install.log 2>&1
 fi
+
+grubby --set-default-index=1
 
 %end
 
