@@ -20,7 +20,8 @@ progname=$0
 
 function usage () {
    cat <<EOF
-Usage: $progname [-c cpus] [-l url to compose] [-v enable viommu] [-d debug output to screen ] [-r dpdk package location for guest] [-k enable rt kernel for guest] [-n name for disk filename]
+Usage: $progname [-c cpus] [-l url to compose] [-v enable viommu] [-d debug output to screen ]
+[-r dpdk package location for guest] [-k enable rt kernel for guest] [-n name for disk filename]
 EOF
    exit 0
 }
@@ -251,9 +252,9 @@ fi
 
 yum -y install iperf3
 ln -s /usr/bin/iperf3 /usr/bin/iperf
-if [[ $RT_KERNEL == 'YES' ]] then;
+if [[ $RT_KERNEL == 'YES' ]]; then
   yum install -y numactl-devel
-  yum install -y libibverbs rdma-core 1>/root/post_install.log 2>&1
+  yum install -y libibverbs rdma-core tuna git nano ftp wget sysstat 1>/root/post_install.log 2>&1
 else
   yum install -y kernel-devel numactl-devel
   yum install -y tuna git nano ftp wget sysstat libibverbs rdma-core 1>/root/post_install.log 2>&1
