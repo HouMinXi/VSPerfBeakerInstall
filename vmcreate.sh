@@ -8,25 +8,26 @@ enforce_status=`getenforce`
 
 setenforce permissive
 
-LOCATION="http://download-node-02.eng.bos.redhat.com/released/RHEL-7/7.3/Server/x86_64/os/"
-CPUS=3
-DEBUG="no"
-VIOMMU="NO"
-DPDK_BUILD="NO"
+#LOCATION="http://download-node-02.eng.bos.redhat.com/released/RHEL-7/7.3/Server/x86_64/os/"
+#CPUS=3
+#DEBUG="no"
+#VIOMMU="NO"
+#DPDK_BUILD="NO"
 #DPDK_URL="http://download.eng.bos.redhat.com/brewroot/packages/dpdk/18.11/2.el7_6/x86_64/dpdk-18.11-2.el7_6.x86_64.rpm"
-DPDK_URL=""
+#DPDK_URL=""
 
 progname=$0
 
 function usage () {
    cat <<EOF
-Usage: $progname [-c cpus] [-l url to compose] [-v enable viommu] [-d debug output to screen ]
-[-r dpdk package location for guest] [-k enable rt kernel for guest] [-n name for disk filename]
+Usage: $progname [-c cpus] [-l url to compose] [-r dpdk package location for guest]  [-n name for disk filename]
+[-b brew install kernel package] [-d debug output to screen ] [-v enable viommu] [-u Building upstream DPDK]
+[-k enable rt kernel for guest]  [-e enable brew install]
 EOF
    exit 0
 }
 
-while getopts c:l:r:n:dhvuk FLAG; do
+while getopts c:l:r:n:b:dhvuke FLAG; do
    case $FLAG in
 
    c)  echo "Creating VM with $OPTARG cpus" 
@@ -35,22 +36,29 @@ while getopts c:l:r:n:dhvuk FLAG; do
    l)  echo "Using Location for VM install $OPTARG"
        LOCATION=$OPTARG
        ;;
+   r)  echo "DPDK release verison $OPTARG"
+       DPDK_URL=$OPTARG
+       ;;
+   n) echo "set $OPTARG name from disk filename"
+      dist=$OPTARG
+      ;;
+   b) echo "install $OPTARG kernel version from brew"
+       kernel_version=$OPTARG
+      ;;
+   d)  echo "debug enabled"
+       DEBUG="yes"
+      ;;
+   h)  echo "found $opt" ; usage ;;
    v)  echo "VIOMMU is enabled"
        VIOMMU="YES";;
    u)  echo "Building upstream DPDK"
        DPDK_BUILD="YES";;
-   d)  echo "debug enabled" 
-       DEBUG="yes";;
-   r)  echo "DPDK release verison $OPTARG"
-       DPDK_URL=$OPTARG
-       ;;
    k) echo "Enable rt kernel installation"
       RT_KERNEL="YES"
      ;;
-   n) echo "set $OPTARG name from disk filename"
-     dist=$OPTARG
+   e) echo "enable brew installation"
+     enable_brew="yes"
      ;;
-   h)  echo "found $opt" ; usage ;;
    \?)  usage ;;
    esac
 done
@@ -62,8 +70,9 @@ vm=${VM_NAME}
 bridge=virbr0
 master_image=${vm}.qcow2
 image_path=/var/lib/libvirt/images/
-dist=${dist:-"rhel73"}
+dist=${dist:-"rhel82"}
 RT_KERNEL=${RT_KERNEL:-"NO"}
+enable_brew=${enable_brew:-"NO"}
 location=$LOCATION
 if [[ ${location: -1} == "/" ]]
 then
@@ -175,7 +184,9 @@ selinux --enforcing
 @base
 @core
 @network-tools
-kernel-rt*
+if [[ $RT_KERNEL == 'YES' ]] && [[ $enable_brew == 'NO' ]]; then
+  kernel-rt*
+fi
 %end
 
 %post
@@ -259,6 +270,23 @@ else
   yum install -y kernel-devel numactl-devel
   yum install -y tuna git nano ftp wget sysstat libibverbs rdma-core 1>/root/post_install.log 2>&1
 fi
+
+yum install -y java-headless wget
+wget http://hdn.corp.redhat.com/rhel7-csb-stage/RPMS/noarch/redhat-internal-cert-install-0.1-23.el7.csb.noarch.rpm
+rpm -ivh http://hdn.corp.redhat.com/rhel7-csb-stage/RPMS/noarch/redhat-internal-cert-install-0.1-23.el7.csb.noarch.rpm
+pushd /etc/yum.repos.d/
+wget https://download.devel.redhat.com/rel-eng/RCMTOOLS/rcm-tools-rhel-8-baseos.repo
+popd
+yum install -y brewkoji
+
+if [[ $RT_KERNEL == 'YES' ]] && [[ $enable_brew == 'YES' ]]; then
+mkdir -p /root/$kernel_version
+pushd /root/$kernel_version
+brew download-build $kernel_version --arch x86_64 --arch noarch
+yum localinstall -y ./*
+popd
+fi
+
 
 
 #Here mkdir and download dpdk
