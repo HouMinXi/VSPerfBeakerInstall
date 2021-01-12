@@ -50,11 +50,11 @@ while getopts c:l:r:n:b:dhvuke FLAG; do
       ;;
    h)  echo "found $opt" ; usage ;;
    v)  echo "VIOMMU is enabled"
-       VIOMMU="YES";;
+       VIOMMU="yes";;
    u)  echo "Building upstream DPDK"
-       DPDK_BUILD="YES";;
+       DPDK_BUILD="yes";;
    k) echo "Enable rt kernel installation"
-      RT_KERNEL="YES"
+      RT_KERNEL="yes"
      ;;
    e) echo "enable brew installation"
      enable_brew="yes"
@@ -71,8 +71,8 @@ bridge=virbr0
 master_image=${vm}.qcow2
 image_path=/var/lib/libvirt/images/
 dist=${dist:-"rhel82"}
-RT_KERNEL=${RT_KERNEL:-"NO"}
-enable_brew=${enable_brew:-"NO"}
+RT_KERNEL=${RT_KERNEL:-"no"}
+enable_brew=${enable_brew:-"no"}
 location=$LOCATION
 if [[ ${location: -1} == "/" ]]
 then
@@ -184,7 +184,7 @@ selinux --enforcing
 @base
 @core
 @network-tools
-if [[ $RT_KERNEL == 'YES' ]] && [[ $enable_brew == 'NO' ]]; then
+if [ $RT_KERNEL == 'yes' ] && [ $enable_brew == 'no' ]; then
   kernel-rt*
 fi
 %end
@@ -263,7 +263,7 @@ fi
 
 yum -y install iperf3
 ln -s /usr/bin/iperf3 /usr/bin/iperf
-if [[ $RT_KERNEL == 'YES' ]]; then
+if [ $RT_KERNEL == 'yes' ]; then
   yum install -y numactl-devel
   yum install -y libibverbs rdma-core tuna git nano ftp wget sysstat 1>/root/post_install.log 2>&1
 else
@@ -279,7 +279,7 @@ wget https://download.devel.redhat.com/rel-eng/RCMTOOLS/rcm-tools-rhel-8-baseos.
 popd
 yum install -y brewkoji
 
-if [[ $RT_KERNEL == 'YES' ]] && [[ $enable_brew == 'YES' ]]; then
+if [ $RT_KERNEL == 'yes' ] && [ $enable_brew == 'yes' ]; then
 mkdir -p /root/$kernel_version
 pushd /root/$kernel_version
 brew download-build $kernel_version --arch x86_64 --arch noarch
@@ -298,13 +298,13 @@ git clone https://github.com/ctrautma/vmscripts.git /root/vmscripts 1>/root/post
 mv /root/vmscripts/* /root/. 1>/root/post_install.log 2>&1
 rm -Rf /root/vmscripts 1>/root/post_install.log 2>&1
 
-if [ "$VIOMMU" == "NO" ] && [ "$DPDK_BUILD" == "NO" ]; then
+if [ "$VIOMMU" == "no" ] && [ "$DPDK_BUILD" == "no" ]; then
     /root/setup_rpms.sh 1>/root/post_install.log 2>&1
-elif [ "$VIOMMU" == "YES" ] && [ "$DPDK_BUILD" == "NO" ]; then
+elif [ "$VIOMMU" == "yes" ] && [ "$DPDK_BUILD" == "no" ]; then
     /root/setup_rpms.sh -v 1>/root/post_install.log 2>&1
-elif [ "$VIOMMU" == "NO" ] && [ "$DPDK_BUILD" == "YES" ]; then
+elif [ "$VIOMMU" == "no" ] && [ "$DPDK_BUILD" == "yes" ]; then
     /root/setup_rpms.sh -u 1>/root/post_install.log 2>&1
-elif [ "$VIOMMU" == "YES" ] && [ "$DPDK_BUILD" == "YES" ]; then
+elif [ "$VIOMMU" == "yes" ] && [ "$DPDK_BUILD" == "yes" ]; then
     /root/setup_rpms.sh -u -v 1>/root/post_install.log 2>&1
 fi
 
