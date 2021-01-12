@@ -87,7 +87,7 @@ DPDK_TOOL_URL=$(dirname $DPDK_URL)/${temp_str/dpdk/dpdk-tools}
 DPDK_VERSION=`echo $temp_str | grep -oP "\d+\.\d+\-\d+" | sed -n 's/\.//p'`
 echo "DPDK VERISON IS "$DPDK_VERSION
 
-extra="ks=file:/${dist}-vm.ks console=ttyS0,115200"
+extra="ks=file:/${dist}-vm.ks --console=ttyS0,115200"
 
 master_exists=`virsh list --all | awk '{print $2}' | grep master`
 if [ -z $master_exists ]; then
@@ -106,7 +106,7 @@ echo deleting master image
 #fix this rhel7 and rhel8 location different use regex get version info 
 #rhel_version=`echo $location | grep -oP "\/RHEL-\d+\.\d+|\/\d+\.\d+|\/latest-RHEL-\d+\.\d+" | tr -d '\.\/\-[a-zA-Z]'`
 # fix can't install stable kernel. i.g http://download-01.eng.brq.redhat.com/rhel-8/rel-eng/RHEL-8/latest-RHEL-8/compose/BaseOS/x86_64/os/
-compose_link=`sed "s/compose.*/COMPOSE_ID/g" <<< "$location"`
+compose_link=`sed "s/compose\/.*/COMPOSE_ID/g" <<< "$location"`
 echo $compose_link
 curl -I $compose_link
 rhel_version=`curl -s $compose_link | grep -oP "RHEL-\d+\.\d+" | tr -d '\.\/\-[a-zA-Z]'`
