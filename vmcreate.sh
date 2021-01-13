@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-yum install -y virt-install libvirt virt-manager util-linux
+yum install -y virt-install libvirt virt-manager util-linux virt-viewer
 systemctl start libvirtd
 
 enforce_status=`getenforce`
@@ -283,7 +283,7 @@ if [ $RT_KERNEL == 'yes' ] && [ $enable_brew == 'yes' ]; then
 mkdir -p /root/$kernel_version
 pushd /root/$kernel_version
 brew download-build $kernel_version --arch x86_64 --arch noarch
-yum localinstall -y ./*
+yum localinstall -y ./kernel*
 popd
 fi
 
@@ -308,6 +308,15 @@ elif [ "$VIOMMU" == "yes" ] && [ "$DPDK_BUILD" == "yes" ]; then
     /root/setup_rpms.sh -u -v 1>/root/post_install.log 2>&1
 fi
 
+echo -e "isolate_managed_irq=Y" >> /etc/tuned/cpu-partitioning-variables.conf
+tuned-adm profile cpu-partitioning
+
+if ((  $rhel_version == 82 )); then
+  systemctl stop irqbalance.service
+  chkconfig irqbalance off
+  /usr/sbin/swapoff -a
+  grub2-editenv - set kernelopts="$kernelopts mitigations=off"
+fi
 grubby --set-default-index=1
 
 %end
