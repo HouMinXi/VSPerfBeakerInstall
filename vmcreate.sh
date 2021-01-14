@@ -189,7 +189,7 @@ if [ $RT_KERNEL == 'yes' ] && [ $enable_brew == 'no' ]; then
 fi
 %end
 
-%post
+%post --logfile=/dev/console --interpreter=/usr/bin/bash
 
 cat >/etc/yum.repos.d/beaker-Server-optional.repo <<REPO
 [beaker-Server-optional]
@@ -287,14 +287,25 @@ yum localinstall -y ./kernel*
 popd
 fi
 
+#if [ $rhel_version == '82' ]; then
+#  echo -e "isolate_managed_irq=Y" >> /etc/tuned/cpu-partitioning-variables.conf
+#  tuned-adm profile cpu-partitioning
+#  systemctl stop irqbalance.service
+#  chkconfig irqbalance off
+#  /usr/sbin/swapoff -a
+#  grub2-editenv - set kernelopts="$kernelopts mitigations=off"
+#fi
 
 
 #Here mkdir and download dpdk
-mkdir -p /root/dpdkrpms/$DPDK_VERSION
-wget $DPDK_URL -P /root/dpdkrpms/$DPDK_VERSION/.
-wget $DPDK_TOOL_URL -P /root/dpdkrpms/$DPDK_VERSION/.
+if [ $DPDK_URL ]
+then
+  mkdir -p /root/dpdkrpms/$DPDK_VERSION
+  wget $DPDK_URL -P /root/dpdkrpms/$DPDK_VERSION/.
+  wget $DPDK_TOOL_URL -P /root/dpdkrpms/$DPDK_VERSION/.
+fi
 
-git clone https://github.com/ctrautma/vmscripts.git /root/vmscripts 1>/root/post_install.log 2>&1
+git clone https://github.com/HouMinXi/vmscripts.git /root/vmscripts 1>/root/post_install.log 2>&1
 mv /root/vmscripts/* /root/. 1>/root/post_install.log 2>&1
 rm -Rf /root/vmscripts 1>/root/post_install.log 2>&1
 
@@ -308,15 +319,6 @@ elif [ "$VIOMMU" == "yes" ] && [ "$DPDK_BUILD" == "yes" ]; then
     /root/setup_rpms.sh -u -v 1>/root/post_install.log 2>&1
 fi
 
-echo -e "isolate_managed_irq=Y" >> /etc/tuned/cpu-partitioning-variables.conf
-tuned-adm profile cpu-partitioning
-
-if ((  $rhel_version == 82 )); then
-  systemctl stop irqbalance.service
-  chkconfig irqbalance off
-  /usr/sbin/swapoff -a
-  grub2-editenv - set kernelopts="$kernelopts mitigations=off"
-fi
 grubby --set-default-index=1
 
 %end
