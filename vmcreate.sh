@@ -64,16 +64,20 @@ while getopts c:l:r:n:b:dhvuke FLAG; do
 done
 
 shift $(($OPTIND - 1))
-
+CPUS=${CPUS:-"2"}
+location=$LOCATION
 VM_NAME=${VM_NAME:-"master"}
 vm=${VM_NAME}
 bridge=virbr0
 master_image=${vm}.qcow2
 image_path=/var/lib/libvirt/images/
+DEBUG=${DEBUG:-"no"}
+VIOMMU=${VIOMMU:-"no"}
 dist=${dist:-"rhel82"}
 RT_KERNEL=${RT_KERNEL:-"no"}
+DPDK_BUILD=${DPDK_BUILD:-"no"}
 enable_brew=${enable_brew:-"no"}
-location=$LOCATION
+
 if [[ ${location: -1} == "/" ]]
 then
     location=${location: :-1}
