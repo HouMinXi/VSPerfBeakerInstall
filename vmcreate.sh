@@ -184,9 +184,6 @@ selinux --enforcing
 @base
 @core
 @network-tools
-if [ $RT_KERNEL == 'yes' ] && [ $enable_brew == 'no' ]; then
-  kernel-rt*
-fi
 %end
 
 %post --logfile=/dev/console --interpreter=/usr/bin/bash
@@ -251,6 +248,10 @@ skip_if_unavailable=1"
 
 REPO
 
+fi
+
+if [ $RT_KERNEL == 'yes' ] && [ $enable_brew == 'no' ]; then
+  yum install -y kernel-rt*
 fi
 
 # if (( $rhel_version >= 80 ))
