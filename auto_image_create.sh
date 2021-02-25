@@ -17,6 +17,9 @@ virsh list --all --name | xargs -I {} virsh undefine {}
 #url_79=http://download.eng.pek2.redhat.com/rhel-7/nightly/latest-RHEL-7.9/compose/Server/x86_64/os/
 #url_83=http://download.eng.bos.redhat.com/rhel-8/rel-eng/RHEL-8/latest-RHEL-8.3/compose/BaseOS/x86_64/os/
 
+#enable viommu and install specify rt-kernel
+# sh vmcreate.sh -c $(( ${i%Q} * 2 + 1 )) -l $url -d -v -k -u -r http://download-node-02.eng.bos.redhat.com/brewroot/packages/dpdk/19.11.3/1.el8/x86_64/dpdk-19.11.3-1.el8.x86_64.rpm -k -b kernel-rt-
+#4.18.0-240.15.1.rt7.69.el8_3 -e
 url_84=http://download-node-02.eng.bos.redhat.com/nightly/rhel-8/RHEL-8/latest-RHEL-8.4.0/compose/BaseOS/x86_64/os/
 
 for url in $url_84
