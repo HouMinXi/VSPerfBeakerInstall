@@ -1,6 +1,6 @@
 #!/bin/bash
 
-
+set -x
 yum install -y virt-install libvirt virt-manager util-linux virt-viewer
 systemctl start libvirtd
 
@@ -91,7 +91,8 @@ DPDK_TOOL_URL=$(dirname $DPDK_URL)/${temp_str/dpdk/dpdk-tools}
 DPDK_VERSION=`echo $temp_str | grep -oP "\d+\.\d+\-\d+" | sed -n 's/\.//p'`
 echo "DPDK VERISON IS "$DPDK_VERSION
 
-extra="ks=file:/${dist}-vm.ks --console=ttyS0,115200"
+extra1="ks=file:/${dist}-vm.ks"
+extra2="console=ttyS0,115200"
 
 master_exists=`virsh list --all | awk '{print $2}' | grep master`
 if [ -z $master_exists ]; then
@@ -294,6 +295,7 @@ fi
 
 
 echo -e "isolate_managed_irq=Y" >> /etc/tuned/cpu-partitioning-variables.conf
+echo -e "isolated_cores=0-$(($CPUS-1))" >> /etc/tuned/cpu-partitioning-variables.conf
 tuned-adm profile cpu-partitioning
 systemctl stop irqbalance.service
 chkconfig irqbalance off
@@ -345,31 +347,31 @@ echo calling virt-install
 if [ $DEBUG == "yes" ]; then
 virt-install --name=$vm\
     --virt-type=kvm\
-    --disk path=$image_path/$master_image,format=qcow2,,size=3,bus=virtio\
+    --disk path=$image_path/$master_image,format=qcow2,,size=8,bus=virtio\
     --vcpus=$CPUS\
     --ram=8192\
     --network bridge=$bridge\
-    --graphics none\
-    --extra-args="$extra"\
+    --extra-args="$extra1"\
     --initrd-inject `pwd`/$dist-vm.ks \
     --location=$location\
     --noreboot\
-    --serial pty\
-    --serial file,path=/tmp/$vm.console
+    --console pty\
+    --nographics\
+    --extra-args "$extra2"
 else
 virt-install --name=$vm\
     --virt-type=kvm\
-    --disk path=$image_path/$master_image,format=qcow2,,size=3,bus=virtio\
+    --disk path=$image_path/$master_image,format=qcow2,,size=8,bus=virtio\
     --vcpus=$CPUS\
     --ram=8192\
     --network bridge=$bridge\
-    --graphics none\
-    --extra-args="$extra"\
+    --extra-args="$extra1"\
     --initrd-inject `pwd`/$dist-vm.ks \
     --location=$location\
     --noreboot\
-    --serial pty\
-    --serial file,path=/tmp/$vm.console &> vminstaller.log
+    --console pty\
+    --nographics\
+    --extra-args "$extra2" &> vminstaller.log
 fi
 
 rm $dist-vm.ks
