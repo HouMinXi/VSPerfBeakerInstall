@@ -35,10 +35,12 @@ do
             echo $VM_NAME
             if [[ $j == viommu ]]
             then
-                cmd="sh vmcreate.sh -c $(( ${i%Q} * 2 + 1 )) -l $url -d -v -k"
+                cmd="sh vmcreate.sh -c $(( ${i%Q} * 2 + 1 )) -l $url -d -v -k -u -r http://download-node-02.eng.bos.redhat.com/brewroot/packages/dpdk/20.11/1.el8fdb.3/x86_64
+/dpdk-20.11-1.el8fdb.3.x86_64.rpm  -e -b kernel-rt-4.18.0-240.15.1.rt7.69.el8_3"
             else
-                cmd="sh vmcreate.sh -c $(( ${i%Q} * 2 + 1 )) -l $url -d -k"
-            fi
+                cmd="sh vmcreate.sh -c $(( ${i%Q} * 2 + 1 )) -l $url -d -k -u -r http://download-node-02.eng.bos.redhat.com/brewroot/packages/dpdk/20.11/1.el8fdb.3/x86_64/dp
+dk-20.11-1.el8fdb.3.x86_64.rpm -e -b kernel-rt-4.18.0-240.15.1.rt7.69.el8_3"
+
             echo $cmd
             eval $cmd
         done
