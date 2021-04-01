@@ -294,12 +294,12 @@ popd
 fi
 
 
-echo -e "isolate_managed_irq=Y" >> /etc/tuned/cpu-partitioning-variables.conf
-echo -e "isolated_cores=0-$(($CPUS-1))" >> /etc/tuned/cpu-partitioning-variables.conf
-tuned-adm profile cpu-partitioning
-systemctl stop irqbalance.service
-chkconfig irqbalance off
-/usr/sbin/swapoff -a
+#echo -e "isolate_managed_irq=Y" >> /etc/tuned/cpu-partitioning-variables.conf
+#echo -e "isolated_cores=0-$(($CPUS-1))" >> /etc/tuned/cpu-partitioning-variables.conf
+#tuned-adm profile cpu-partitioning
+#systemctl stop irqbalance.service
+#chkconfig irqbalance off
+#/usr/sbin/swapoff -a
 #grub2-editenv - set kernelopts="$kernelopts mitigations=off"
 
 
