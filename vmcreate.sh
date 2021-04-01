@@ -271,10 +271,10 @@ yum -y install iperf3
 ln -s /usr/bin/iperf3 /usr/bin/iperf
 if [ $RT_KERNEL == 'yes' ]; then
   yum install -y numactl-devel
-  yum install -y libibverbs rdma-core tuna git nano ftp wget sysstat 1>/root/post_install.log 2>&1
+  yum install -y libibverbs rdma-core tuna git nano ftp wget sysstat tuned-profiles* 1>/root/post_install.log 2>&1
 else
   yum install -y kernel-devel numactl-devel
-  yum install -y tuna git nano ftp wget sysstat libibverbs rdma-core 1>/root/post_install.log 2>&1
+  yum install -y tuna git nano ftp wget sysstat libibverbs rdma-core tuned-profiles* 1>/root/post_install.log 2>&1
 fi
 
 yum install -y java-headless wget
@@ -300,7 +300,7 @@ tuned-adm profile cpu-partitioning
 systemctl stop irqbalance.service
 chkconfig irqbalance off
 /usr/sbin/swapoff -a
-grub2-editenv - set kernelopts="$kernelopts mitigations=off"
+#grub2-editenv - set kernelopts="$kernelopts mitigations=off"
 
 
 
@@ -312,9 +312,9 @@ then
   wget $DPDK_TOOL_URL -P /root/dpdkrpms/$DPDK_VERSION/.
 fi
 
-git clone https://github.com/HouMinXi/vmscripts.git /root/vmscripts 1>/root/post_install.log 2>&1
-mv /root/vmscripts/* /root/. 1>/root/post_install.log 2>&1
-rm -Rf /root/vmscripts 1>/root/post_install.log 2>&1
+wget -P /root http://netqe-bj.usersys.redhat.com/share/mhou/vmscripts.tar.gz 1>/root/post_install.log 2>&1
+tar zxvf /root/vmscripts.tar.gz -C /root 1>/root/post_install.log 2>&1
+
 
 if [ "$VIOMMU" == "no" ] && [ "$DPDK_BUILD" == "no" ]; then
     /root/setup_rpms.sh 1>/root/post_install.log 2>&1
@@ -355,8 +355,8 @@ virt-install --name=$vm\
     --initrd-inject `pwd`/$dist-vm.ks \
     --location=$location\
     --noreboot\
+    --graphics none\
     --console pty\
-    --nographics\
     --extra-args "$extra2"
 else
 virt-install --name=$vm\
@@ -369,8 +369,8 @@ virt-install --name=$vm\
     --initrd-inject `pwd`/$dist-vm.ks \
     --location=$location\
     --noreboot\
+    --graphics none\
     --console pty\
-    --nographics\
     --extra-args "$extra2" &> vminstaller.log
 fi
 
