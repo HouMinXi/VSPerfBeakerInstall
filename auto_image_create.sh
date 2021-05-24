@@ -18,8 +18,7 @@ virsh list --all --name | xargs -I {} virsh undefine {}
 #url_83=http://download.eng.bos.redhat.com/rhel-8/rel-eng/RHEL-8/latest-RHEL-8.3/compose/BaseOS/x86_64/os/
 
 #enable viommu and install specify rt-kernel
-# sh vmcreate.sh -c $(( ${i%Q} * 2 + 1 )) -l $url -d -v -k -u -r http://download-node-02.eng.bos.redhat.com/brewroot/packages/dpdk/19.11.3/1.el8/x86_64/dpdk-19.11.3-1.el8.x86_64.rpm -k -b kernel-rt-
-#4.18.0-240.15.1.rt7.69.el8_3 -e
+# sh vmcreate.sh -c $(( ${i%Q} * 2 + 1 )) -l $url -d -v -k -u -r http://download-node-02.eng.bos.redhat.com/brewroot/packages/dpdk/19.11.3/1.el8/x86_64/dpdk-19.11.3-1.el8.x86_64.rpm -k -b kernel-rt-4.18.0-240.15.1.rt7.69.el8_3 -e
 url_84=http://download-node-02.eng.bos.redhat.com/nightly/rhel-8/RHEL-8/latest-RHEL-8.4.0/compose/BaseOS/x86_64/os/
 
 for url in $url_84
@@ -35,14 +34,13 @@ do
             echo $VM_NAME
             if [[ $j == viommu ]]
             then
-                cmd="sh vmcreate.sh -c $(( ${i%Q} * 2 + 1 )) -l $url -d -v -k -u -r http://download-node-02.eng.bos.redhat.com/brewroot/packages/dpdk/20.11/1.el8fdb.3/x86_64
-/dpdk-20.11-1.el8fdb.3.x86_64.rpm  -e -b kernel-rt-4.18.0-240.15.1.rt7.69.el8_3"
+                cmd="sh vmcreate.sh -c $(( ${i%Q} * 2 + 1 )) -l $url -d -v -k -u -r http://download-node-02.eng.bos.redhat.com/brewroot/packages/dpdk/20.11/3.el8/x86_64/dpdk-20.11-3.el8.x86_64.rpm  -e -b kernel-rt-4.18.0-305.rt7.72.el8"
             else
-                cmd="sh vmcreate.sh -c $(( ${i%Q} * 2 + 1 )) -l $url -d -k -u -r http://download-node-02.eng.bos.redhat.com/brewroot/packages/dpdk/20.11/1.el8fdb.3/x86_64/dp
-dk-20.11-1.el8fdb.3.x86_64.rpm -e -b kernel-rt-4.18.0-240.15.1.rt7.69.el8_3"
+                cmd="sh vmcreate.sh -c $(( ${i%Q} * 2 + 1 )) -l $url -d -k -u -r http://download-node-02.eng.bos.redhat.com/brewroot/packages/dpdk/20.11/3.el8/x86_64/dpdk-20.11-3.el8.x86_64.rpm -e -b kernel-rt-4.18.0-305.rt7.72.el8"
 
             echo $cmd
             eval $cmd
+    fi
         done
     done
 done
