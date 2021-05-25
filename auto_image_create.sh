@@ -37,10 +37,9 @@ do
                 cmd="sh vmcreate.sh -c $(( ${i%Q} * 2 + 1 )) -l $url -d -v -k -u -r http://download-node-02.eng.bos.redhat.com/brewroot/packages/dpdk/20.11/3.el8/x86_64/dpdk-20.11-3.el8.x86_64.rpm  -e -b kernel-rt-4.18.0-305.rt7.72.el8"
             else
                 cmd="sh vmcreate.sh -c $(( ${i%Q} * 2 + 1 )) -l $url -d -k -u -r http://download-node-02.eng.bos.redhat.com/brewroot/packages/dpdk/20.11/3.el8/x86_64/dpdk-20.11-3.el8.x86_64.rpm -e -b kernel-rt-4.18.0-305.rt7.72.el8"
-
+	    fi
             echo $cmd
             eval $cmd
-    fi
         done
     done
 done
